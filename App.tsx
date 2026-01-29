@@ -22,6 +22,7 @@ const App: React.FC = () => {
     clothes: '',
     background: '',
     format: 'round', // Default format
+    targetMB: 0, // 0 = Max quality
     enhance: true,
   });
 
@@ -78,11 +79,59 @@ const App: React.FC = () => {
     }
   };
 
-  const handleDownload = () => {
+  const compressToSize = async (base64Str: string, targetMB: number): Promise<string> => {
+    if (targetMB <= 0) return base64Str; // No compression if 0
+
+    const targetBytes = targetMB * 1024 * 1024;
+    // Approximation: base64 string length * 0.75 ~= byte size
+    if (base64Str.length * 0.75 <= targetBytes) return base64Str;
+
+    return new Promise((resolve) => {
+        const img = new Image();
+        img.src = base64Str;
+        img.onload = () => {
+            const canvas = document.createElement('canvas');
+            canvas.width = img.width;
+            canvas.height = img.height;
+            const ctx = canvas.getContext('2d');
+            if (!ctx) { resolve(base64Str); return; }
+            
+            ctx.drawImage(img, 0, 0);
+            
+            let quality = 0.9;
+            const attemptCompression = () => {
+                const dataUrl = canvas.toDataURL('image/jpeg', quality);
+                const size = dataUrl.length * 0.75;
+                
+                if (size <= targetBytes || quality <= 0.1) {
+                    console.log(`Compressed to ${(size / 1024 / 1024).toFixed(2)} MB (Quality: ${quality.toFixed(1)})`);
+                    resolve(dataUrl);
+                } else {
+                    quality -= 0.1;
+                    attemptCompression();
+                }
+            };
+            attemptCompression();
+        };
+        img.onerror = () => resolve(base64Str);
+    });
+  };
+
+  const handleDownload = async () => {
     if (!generatedImage) return;
+    
+    let imageToDownload = generatedImage;
+
+    // Apply compression if needed
+    if (settings.targetMB && settings.targetMB > 0) {
+        imageToDownload = await compressToSize(generatedImage, settings.targetMB);
+    }
+
     const link = document.createElement('a');
-    link.href = generatedImage;
-    link.download = `context-cam-${Date.now()}.png`;
+    link.href = imageToDownload;
+    // Suggest filename with context and size
+    const sizeLabel = settings.targetMB ? `-${settings.targetMB}MB` : '';
+    link.download = `context-cam${sizeLabel}-${Date.now()}.jpg`; // Note: Canvas export usually defaults to PNG or JPG, here we use JPG for compression
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -283,7 +332,7 @@ const App: React.FC = () => {
                       className="flex items-center gap-2 px-5 py-2.5 bg-purple-600 hover:bg-purple-500 text-white rounded-lg text-sm font-medium transition-all"
                     >
                        {isEvaluating ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div> : <Award className="w-4 h-4" />}
-                       Évaluer l'image
+                       Évaluer
                     </button>
 
                     <button 
@@ -291,7 +340,7 @@ const App: React.FC = () => {
                       className="flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-sm font-medium transition-all"
                     >
                       <Download className="w-4 h-4" />
-                      Télécharger
+                      Télécharger {settings.targetMB ? `(<${settings.targetMB}MB)` : ''}
                     </button>
                   </div>
                </div>

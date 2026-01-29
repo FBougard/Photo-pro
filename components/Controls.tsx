@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { GenerationSettings } from '../types';
-import { Briefcase, Coffee, Camera, User, Palette, Scissors, Smile, Circle, Square, MonitorPlay } from 'lucide-react';
+import { Briefcase, Coffee, Camera, User, Palette, Scissors, Smile, Circle, Square, MonitorPlay, FileDown } from 'lucide-react';
 
 interface ControlsProps {
   settings: GenerationSettings;
@@ -47,6 +47,13 @@ const FORMATS = [
   { id: 'youtube', label: 'Miniature (16:9)', icon: MonitorPlay },
 ];
 
+const SIZES = [
+  { value: 0.5, label: '0.5 Mo' },
+  { value: 1, label: '1 Mo' },
+  { value: 2, label: '2 Mo' },
+  { value: 0, label: 'Max' },
+];
+
 const Controls: React.FC<ControlsProps> = ({ 
   settings, 
   onSettingsChange, 
@@ -67,6 +74,9 @@ const Controls: React.FC<ControlsProps> = ({
     }
     if (!settings.format) {
       handleChange('format', 'round');
+    }
+    if (settings.targetMB === undefined) {
+      handleChange('targetMB', 0);
     }
   }, []);
 
@@ -110,26 +120,50 @@ const Controls: React.FC<ControlsProps> = ({
       {activeTab === 'style' && (
         <div className="space-y-5 animate-in fade-in slide-in-from-left-4 duration-300">
           
-          {/* Format Selection */}
-          <div>
-            <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">Format de sortie</label>
-            <div className="grid grid-cols-3 gap-2">
-              {FORMATS.map((fmt) => (
-                <button
-                  key={fmt.id}
-                  onClick={() => handleChange('format', fmt.id)}
-                  className={`
-                    flex flex-col items-center justify-center p-2 rounded-xl border transition-all
-                    ${settings.format === fmt.id 
-                      ? 'bg-slate-700 border-slate-500 text-white shadow-md' 
-                      : 'bg-slate-800/50 border-slate-700 text-slate-400 hover:bg-slate-800'
-                    }
-                  `}
-                >
-                  <fmt.icon className="w-5 h-5 mb-1" />
-                  <span className="text-[10px] sm:text-xs font-medium text-center">{fmt.label}</span>
-                </button>
-              ))}
+          <div className="grid grid-cols-2 gap-4">
+            {/* Format Selection */}
+            <div>
+              <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Format</label>
+              <div className="flex bg-slate-800/50 rounded-lg p-1 border border-slate-700">
+                {FORMATS.map((fmt) => (
+                  <button
+                    key={fmt.id}
+                    onClick={() => handleChange('format', fmt.id)}
+                    title={fmt.label}
+                    className={`
+                      flex-1 flex items-center justify-center p-2 rounded-md transition-all
+                      ${settings.format === fmt.id 
+                        ? 'bg-slate-700 text-white shadow-sm' 
+                        : 'text-slate-400 hover:text-slate-200'
+                      }
+                    `}
+                  >
+                    <fmt.icon className="w-4 h-4" />
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Target Size Selection */}
+            <div>
+              <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Poids Max</label>
+              <div className="flex bg-slate-800/50 rounded-lg p-1 border border-slate-700">
+                 {SIZES.map((size) => (
+                   <button
+                    key={size.value}
+                    onClick={() => handleChange('targetMB', size.value)}
+                    className={`
+                      flex-1 text-[10px] sm:text-xs font-medium py-2 px-1 rounded-md transition-all
+                      ${settings.targetMB === size.value 
+                        ? 'bg-blue-600/20 text-blue-300 ring-1 ring-blue-500/50' 
+                        : 'text-slate-400 hover:text-slate-200'
+                      }
+                    `}
+                   >
+                     {size.label}
+                   </button>
+                 ))}
+              </div>
             </div>
           </div>
 

@@ -2,10 +2,11 @@ export interface GenerationSettings {
   context: string;
   clothes: string;
   background: string;
-  format: 'square' | 'round' | 'youtube'; // Nouveau champ
+  format: 'square' | 'round' | 'youtube';
   hairstyle?: string;
   beard?: string;
-  enhance?: boolean; // Pour la symétrie et la qualité
+  enhance?: boolean;
+  targetMB?: number; // Poids cible en MB (0 pour max/original)
 }
 
 export interface EvaluationResult {
