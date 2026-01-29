@@ -1,0 +1,7 @@
+{
+  "name": "ContextCam",
+  "description": "Créez des photos de profil professionnelles et adaptées à chaque contexte grâce à l'IA.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
